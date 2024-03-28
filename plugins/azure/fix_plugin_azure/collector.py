@@ -7,6 +7,7 @@ from fix_plugin_azure.config import AzureConfig, AzureCredentials
 from fix_plugin_azure.azure_client import AzureClient
 from fix_plugin_azure.resource.compute import (
     AzureVirtualMachineSize,
+    AzureDiskType,
     resources as compute_resources,
 )
 from fix_plugin_azure.resource.base import (
@@ -113,6 +114,12 @@ class AzureSubscriptionCollector:
             queue.wait_for_submitted_work()
             # filter nodes
             self.filter_nodes()
+
+            # post process nodes
+            for node, data in list(self.graph.nodes(data=True)):
+                if isinstance(node, AzureResource):
+                    node.after_collect(builder, data.get("source", {}))
+
             self.core_feedback.progress_done(self.subscription.subscription_id, 1, 1, context=[self.cloud.id])
             log.info(f"[Azure:{self.subscription.safe_name}] Collecting resources done.")
 
@@ -167,6 +174,7 @@ class AzureSubscriptionCollector:
         rm_nodes(AzureVirtualMachineSize, AzureLocation)
         rm_nodes(AzureExpressRoutePortsLocation, AzureSubscription)
         rm_nodes(AzureNetworkVirtualApplianceSku, AzureSubscription)
+        rm_nodes(AzureDiskType, AzureLocation)
         remove_usage_zero_value()
 
     def _delete_nodes(self, nodes_to_delte: Any) -> None:

@@ -62,6 +62,16 @@ def test_disks_resource(builder: GraphBuilder) -> None:
     assert collected.volume_encrypted is True
 
 
+def test_disk_type(builder: GraphBuilder) -> None:
+    collected = roundtrip_check(AzureDiskType, builder, check_correct_ser=False)
+    assert len(collected) > 0
+
+    resource_types: List[Type[AzureResource]] = [AzureDisk]
+    connect_resources(builder, resource_types)
+
+    assert len(builder.edges_of(AzureDisk, AzureDiskType)) == 1
+
+
 def test_disk_access(builder: GraphBuilder) -> None:
     collected = roundtrip_check(AzureDiskAccess, builder)
     assert len(collected) == 2
@@ -157,6 +167,12 @@ def test_virtual_machine_scale_set(builder: GraphBuilder) -> None:
 def test_virtual_machine_size(builder: GraphBuilder) -> None:
     collected = roundtrip_check(AzureVirtualMachineSize, builder)
     assert len(collected) == 12
+
+    resource_types: List[Type[AzureResource]] = [
+        AzureVirtualMachine,
+    ]
+    connect_resources(builder, resource_types)
+    assert len(builder.edges_of(AzureVirtualMachine, AzureVirtualMachineSize)) == 2
 
 
 def test_virtual_machine_size_resources(builder: GraphBuilder) -> None:
